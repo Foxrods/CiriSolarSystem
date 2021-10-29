@@ -5,7 +5,6 @@ import { RenderPass } from "/node_modules/three/examples/jsm/postprocessing/Rend
 import { UnrealBloomPass } from "/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { FontLoader } from "/node_modules/three/examples/jsm/loaders/FontLoader.js";
 import { TextGeometry } from "/node_modules/three/examples/jsm/geometries/TextGeometry.js";
-import SpriteText from 'three-spritetext';
 
 //load fonts
 const normalFont = './GeosansLight_regular.json';
@@ -39,6 +38,15 @@ bloomComposer.renderToScreen = true;
 bloomComposer.addPass(renderScene);
 bloomComposer.addPass(bloomPass);
 
+//raycast
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+function onMouseMove( event ) {
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+}
+window.addEventListener( 'mousemove', onMouseMove, false );
+
 //loading texts
 function addTextOnPosition(text, xPos, yPos, zPos, fontName, fontSize = 10){
   const fontloader = new FontLoader();
@@ -46,20 +54,20 @@ function addTextOnPosition(text, xPos, yPos, zPos, fontName, fontSize = 10){
   const textGeometry = new TextGeometry(text, {
     font: font,
     size: fontSize,
-    height: 1
+    height: 2
   });
   const textMesh = new THREE.Mesh(textGeometry, new THREE.MeshStandardMaterial({
     emissive: 0xffffff
   }));
   textMesh.position.set(xPos, yPos, zPos);
+  textMesh.lookAt(xPos,160,120);
+  textMesh.name="text";
   scene.add(textMesh);
   });
 }
 
 addTextOnPosition('Ciri -', -23, 60, 0, normalFont);
 addTextOnPosition('Sciri', 7, 60, 0, alienFont);
-// addTextOnPosition('Muna -', -108, 10, 0, normalFont, 3);
-// addTextOnPosition('Muna', -95, 10, 0, alienFont, 3);
 
 //background
 const backGround = new THREE.TextureLoader().load('universebg.png');
@@ -108,7 +116,8 @@ let planetMuna_angle = 0.2;
 
 function animate(){
   requestAnimationFrame(animate);
-  // renderer.render(scene, camera);
+  
+  // animations
   bloomComposer.render();
 
   planetA.rotation.y += 0.005;
@@ -132,6 +141,32 @@ function animate(){
   translatePlanet(planetMuna, 100, planetMuna_angle);
 
   sun.rotation.y += 0.0001;
+
+  // raycast
+  // update the picking ray with the camera and mouse position
+	raycaster.setFromCamera( mouse, camera );
+  // calculate objects intersecting the picking ray
+	const intersects = raycaster.intersectObjects( scene.children );
+  //remover rings
+  scene.traverse( function( node ) {
+    if ( node instanceof THREE.Mesh ) {
+        if(node.name == "select")
+          scene.remove(node);
+    }
+  });
+  //add rings arround meshes
+	for ( let i = 0; i < intersects.length; i ++ ) {
+		if(intersects[ i ].object.name !== 'text'){
+      let radius = intersects[ i ].object.geometry.parameters.radius && intersects[ i ].object.geometry.parameters.radius > 8 ? intersects[ i ].object.geometry.parameters.radius: 8;
+      const geometry = new THREE.RingGeometry( radius*1.4, radius*1.5, 1024 );
+      const material = new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide } );
+      const mesh = new THREE.Mesh( geometry, material );
+      mesh.position.set(intersects[ i ].object.position.x, intersects[ i ].object.position.y, intersects[ i ].object.position.z);
+      mesh.lookAt(intersects[ i ].object.position.x,160,120);
+      mesh.name = "select";
+      scene.add( mesh );
+    }
+	}
 }
 
 function translatePlanet(mesh, radius, angle){
