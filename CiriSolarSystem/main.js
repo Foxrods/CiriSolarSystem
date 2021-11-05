@@ -3,6 +3,19 @@ import * as THREE from 'three';
 import { EffectComposer } from "/node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "/node_modules/three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import planetAtexture from "/planetA.jpg";
+import planetBtexture from "/planetB.png";
+import planetCtexture from "/planetC.png";
+import planetDtexture from "/planetD.png";
+import planetEtexture from "/planetE.png";
+import starTexture from "/star2.jpg";
+import starNormal from "/starNormalMap.png";
+import normalA from "/ANormalMap.png";
+import normalB from "/BNormalMap.png";
+import normalC from "/CNormalMap.jpg";
+import normalD from "/DNormalMap.png";
+import normalMuna from "/MunaNormal.png";
+
 
 //scene comp and renderer config
 const scene = new THREE.Scene();
@@ -73,16 +86,16 @@ function createFakePlanet(radius, image, normal){
   return planet;
 }
 
-const planetA = createPlanet(14, 'planetA.jpg', 'ANormalMap.png', 170, 'Zoyovoga');
-const planetB = createPlanet(12, 'planetB.png', 'BNormalMap.png', 220, 'Nesnope');
-const planetC = createPlanet(4, 'planetC.png', 'CNormalMap.jpg', 120, 'Setune');
-const planetMuna = createPlanet(3.2, 'planetE.png', 'MunaNormal.png', 100, 'Muna');
-const planetD = createPlanet(3, 'planetD.png', 'DNormalMap.png', 75, 'Roinides');
+const planetA = createPlanet(14, planetAtexture, normalA, 170, 'Zoyovoga');
+const planetB = createPlanet(12, planetBtexture, normalB, 220, 'Nesnope');
+const planetC = createPlanet(4, planetCtexture, normalC, 120, 'Setune');
+const planetMuna = createPlanet(3.2, planetEtexture, normalMuna, 100, 'Muna');
+const planetD = createPlanet(3, planetDtexture, normalD, 75, 'Roinides');
 
 //Sun
 const geometrySun = new THREE.SphereGeometry(38,32,32);
 const materialSun = new THREE.MeshStandardMaterial({
-  emissiveMap: new THREE.TextureLoader().load('star2.jpg'),
+  emissiveMap: new THREE.TextureLoader().load(starTexture),
   emissive: 0xffffff
 });
 const sun = new THREE.Mesh(geometrySun,materialSun);
@@ -177,8 +190,8 @@ function onPlanetClick( event ){
       return;
     }
     if(intersects[ i ].object.name == "Ciri"){
-      createFakePlanet(100, 'star2.jpg', 'starNormalMap1.png');
-      bloomPass.strength = 1.4;
+      createFakePlanet(100, starTexture, starNormal);
+      bloomPass.strength = 0.5;
     }
     else{
       createFakePlanet(100, intersects[ i ].object.material.map.image.src, intersects[ i ].object.material.normalMap.image.src);
